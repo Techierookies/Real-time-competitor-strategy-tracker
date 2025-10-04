@@ -1,163 +1,89 @@
-@import "tailwindcss";
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import "tailwindcss";
 
 
-/* Apple-Inspired Design System - Premium iPhone E-commerce */
 
+/* ---------------- Variables ---------------- */
 
-  :root {
-    /* Apple Core Colors */
-    --background: 0 0% 100%;
-    --foreground: 0 0% 11.4%;
-    
-    /* Apple Black Primary */
-    --primary: 0 0% 11.4%;
-    --primary-foreground: 0 0% 98%;
-    
-    /* Apple Gray Secondary */
-    --secondary: 210 6% 96.3%;
-    --secondary-foreground: 0 0% 11.4%;
-    
-    /* Apple Blue Accent */
-    --accent: 212 100% 45.1%;
-    --accent-foreground: 0 0% 98%;
-    
-    /* Surface Colors */
-    --card: 0 0% 100%;
-    --card-foreground: 0 0% 11.4%;
-    
-    --muted: 210 6% 96.3%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    
-    /* Glass Effect */
-    --glass: 0 0% 100% / 0.8;
-    --glass-border: 0 0% 100% / 0.18;
-    
-    /* Interactive States */
-    --hover-lift: 0 0% 100%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    
-    /* Form Elements */
-    --border: 210 6% 90.2%;
-    --input: 210 6% 96.3%;
-    --ring: 212 100% 45.1%;
-    
-    /* Gradients */
-    --gradient-hero: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary)) 50%, hsl(var(--accent)) 100%);
-    --gradient-glass: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
-    --gradient-premium: linear-gradient(135deg, hsl(var(--secondary)), hsl(var(--background)));
-    
-    /* Shadows */
-    --shadow-apple: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-    --shadow-glass: 0 8px 32px rgba(31, 38, 135, 0.37);
-    --shadow-premium: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-    
-    /* Border Radius */
-    --radius: 0.75rem;
-    --radius-card: 1.5rem;
-    
-    /* Typography Scale */
-    --font-display: 'SF Pro Display', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-    --font-text: 'SF Pro Text', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-
-    --sidebar-background: 0 0% 98%;
-
-    --sidebar-foreground: 240 5.3% 26.1%;
-
-    --sidebar-primary: 240 5.9% 10%;
-
-    --sidebar-primary-foreground: 0 0% 98%;
-
-    --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
-  }
-
-  .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
-  }
-
-
-@layer base {
-  * {
-    @apply border-border;
-  }
-
-  body {
-    @apply bg-background text-foreground font-text antialiased;
-  }
-  
-  h1, h2, h3, h4, h5, h6 {
-    font-family: var(--font-display);
-  }
+:root {
+  --background: 0 0% 100%;
+  --foreground: 0 0% 11.4%;
+  --primary: 0 0% 11.4%;
+  --primary-foreground: 0 0% 98%;
+  --secondary: 210 6% 96.3%;
+  --secondary-foreground: 0 0% 11.4%;
+  --accent: 212 100% 45.1%;
+  --accent-foreground: 0 0% 98%;
+  --card: 0 0% 100%;
+  --card-foreground: 0 0% 11.4%;
+  --muted: 210 6% 96.3%;
+  --muted-foreground: 215.4 16.3% 46.9%;
+  --glass: 0 0% 100% / 0.8;
+  --glass-border: 0 0% 100% / 0.18;
+  --border: 210 6% 90.2%;
+  --input: 210 6% 96.3%;
+  --ring: 212 100% 45.1%;
+  --shadow-premium: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  --radius: 0.75rem;
+  --radius-card: 1.5rem;
+  --font-display: 'SF Pro Display', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-text: 'SF Pro Text', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
+.dark {
+  --background: 222.2 84% 4.9%;
+  --foreground: 210 40% 98%;
+  --card: 222.2 84% 4.9%;
+  --card-foreground: 210 40% 98%;
+  --primary: 210 40% 98%;
+  --primary-foreground: 222.2 47.4% 11.2%;
+  --secondary: 217.2 32.6% 17.5%;
+  --secondary-foreground: 210 40% 98%;
+}
 
-  .glass {
-    background: rgba(255, 255, 255, 0.25);
-    backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.18);
-  }
-  
-  /* Premium Card Effect */
-  .card-premium {
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: var(--shadow-premium);
-  }
-  
-  /* Apple-style hover lift */
-  .hover-lift {
-    @apply transition-all duration-300 ease-out;
-  }
-  
-  .hover-lift:hover {
-    @apply -translate-y-1;
-    box-shadow: var(--shadow-premium);
-  }
-  
-  /* Smooth transitions */
-  .transition-apple {
-    @apply transition-all duration-300 ease-out;
-  }
+/* ---------------- Base ---------------- */
 
+body {
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font-family: var(--font-text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Headings use display font */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+}
+
+/* ---------------- Components ---------------- */
+
+/* Glass Morphism Effect */
+.glass {
+  background: rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+/* Premium Card Effect */
+.card-premium {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: var(--shadow-premium);
+  border-radius: var(--radius-card);
+}
+
+/* Apple-style hover lift */
+.hover-lift {
+  transition: all 0.3s ease-out;
+}
+.hover-lift:hover {
+  transform: translateY(-0.25rem);
+  box-shadow: var(--shadow-premium);
+}
+
+/* Smooth transitions */
+.transition-apple {
+  transition: all 0.3s ease-out;
+}
