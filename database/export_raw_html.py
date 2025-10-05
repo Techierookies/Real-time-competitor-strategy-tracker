@@ -1,68 +1,61 @@
 import sqlite3
 import os
 import html
+from bs4 import BeautifulSoup
+
 DB_NAME = "competitor_tracker.db"
-def export_latest_raw_html(limit=6):
+
+def extract_field_from_html(html_content, field_name):
+    # Example parsing logic (adjust selectors to your raw HTML)
+    soup = BeautifulSoup(html_content, "html.parser")
+    if field_name == "price":
+        tag = soup.select_one(".price")  # change selector to match your HTML
+        return tag.text.strip() if tag else "N/A"
+    elif field_name == "rating":
+        tag = soup.select_one(".rating")
+        return tag.text.strip() if tag else "N/A"
+    elif field_name == "reviews":
+        tag = soup.select_one(".reviews")
+        return tag.text.strip() if tag else "N/A"
+    return "N/A"
+
+def export_structured_table(limit=50):
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
-    cursor.execute(
-        "SELECT id, model, site, raw_html FROM raw_scrapes ORDER BY id DESC LIMIT ?",
-        (limit,)
-    )
+    cursor.execute("SELECT id, model, site, raw_html FROM raw_scrapes ORDER BY id DESC LIMIT ?", (limit,))
     rows = cursor.fetchall()
     conn.close()
+
     if not rows:
-        print(" No rows found")
+        print("No rows found")
         return
+
     os.makedirs("exports", exist_ok=True)
-    combined_filename = "exports/combined_raw_export.html"
-    # Build HTML file
-    with open(combined_filename, "w", encoding="utf-8") as f:
-        f.write("<!doctype html>\n<html>\n<head>\n")
+    filename = "exports/iphone_table.html"
+
+    with open(filename, "w", encoding="utf-8") as f:
+        f.write("<!DOCTYPE html>\n<html>\n<head>\n")
         f.write("<meta charset='utf-8'>\n")
-        f.write("<title>Combined Raw Export</title>\n")
-        f.write("<style>\n")
-        f.write("body{font-family:Arial, sans-serif; margin:20px}\n")
-        f.write(".toc{background:#f7f7f7; padding:15px; border-radius:6px}\n")
-        f.write(".entry{border:2px solid #ccc; margin:20px 0; padding:12px}\n")
-        f.write(".entry h2{margin:0 0 10px 0}\n")
-        f.write(".meta{color:#555; font-size:0.95em; margin-bottom:8px}\n")
-        f.write("</style>\n")
-        f.write("</head>\n<body>\n")
-        f.write("<h1>Exported Raw HTML Pages</h1>\n")
-        f.write("<div class='toc'>\n")
-        f.write("<h3>Table of contents</h3>\n")
-        f.write("<ul>\n")
+        f.write("<title>iPhone Data Table</title>\n")
+        f.write("<link href='https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css' rel='stylesheet'>\n")
+        f.write("</head>\n<body class='p-4'>\n")
+        f.write("<h2 class='mb-4 text-center'>iPhone Price, Rating & Reviews</h2>\n")
+        f.write("<div class='table-responsive'>\n")
+        f.write("<table class='table table-bordered table-striped table-hover'>\n")
+        f.write("<thead class='table-dark'><tr>\n")
+        f.write("<th>ID</th><th>Model</th><th>Source</th><th>Price</th><th>Rating</th><th>Reviews</th>\n")
+        f.write("</tr></thead>\n<tbody>\n")
+
         for row in rows:
             row_id, model, site, raw_html = row
-            anchor = f"row-{row_id}"
-            f.write(f"<li><a href='#{anchor}'>Row {row_id}: {html.escape(model)} ({html.escape(site)})</a></li>\n")
-        f.write("</ul>\n")
-        f.write("</div>\n\n")
-        # Insert each raw HTML under its anchor, with a back-to-top link
-        for row in rows:
-            row_id, model, site, raw_html = row
-            anchor = f"row-{row_id}"
-            f.write(f"<section id='{anchor}' class='entry'>\n")
-            f.write(f"<h2>Row {row_id}: {html.escape(model)} ({html.escape(site)})</h2>\n")
-            f.write(f"<div class='meta'>Row ID: {row_id} &nbsp; | &nbsp; Model: {html.escape(model)} &nbsp; | &nbsp; Site: {html.escape(site)}</div>\n")
-            try:
-                safe_content = raw_html if raw_html else ""
-                max_srcdoc = 1000000  # 1 MB
-                srcdoc_content = safe_content[:max_srcdoc]
-                srcdoc_content = srcdoc_content.replace("</script>", "<\\/script>")
-                f.write("<div style='margin-bottom:8px;'>\n")
-                f.write(f"<iframe style='width:100%; height:600px; border:1px solid #999' srcdoc=\"{html.escape(srcdoc_content)}\"></iframe>\n")
-                f.write("</div>\n")
-            except Exception:
-                f.write("<div style='max-height:600px; overflow:auto; background:#fff; padding:10px; border:1px dashed #ddd;'>\n")
-                f.write("<pre style='white-space:pre-wrap; font-size:12px;'>\n")
-                f.write(html.escape(raw_html[:50000]))  # show up to 50k chars
-                f.write("\n</pre>\n</div>\n")
-            f.write("<p><a href='#top'>Back to top</a></p>\n")
-            f.write("</section>\n\n")
-        f.write("</body>\n</html>")
-    print(f"Exported {len(rows)} rows into one file → {combined_filename}")
+            price = extract_field_from_html(raw_html, "price")
+            rating = extract_field_from_html(raw_html, "rating")
+            reviews = extract_field_from_html(raw_html, "reviews")
+            f.write(f"<tr><td>{row_id}</td><td>{html.escape(model)}</td><td>{html.escape(site)}</td><td>{price}</td><td>{rating}</td><td>{reviews}</td></tr>\n")
+
+        f.write("</tbody>\n</table>\n</div>\n</body>\n</html>")
+
+    print(f"Exported {len(rows)} rows → {filename}")
+
 if __name__ == "__main__":
-    # default limit is 6 (you can change it if needed)
-    export_latest_raw_html(limit=6)
+    export_structured_table(limit=50)
