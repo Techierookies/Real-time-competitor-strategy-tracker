@@ -1,61 +1,55 @@
 import sqlite3
 import os
+import sys
 import html
-from bs4 import BeautifulSoup
-
 DB_NAME = "competitor_tracker.db"
-
-def extract_field_from_html(html_content, field_name):
-    # Example parsing logic (adjust selectors to your raw HTML)
-    soup = BeautifulSoup(html_content, "html.parser")
-    if field_name == "price":
-        tag = soup.select_one(".price")  # change selector to match your HTML
-        return tag.text.strip() if tag else "N/A"
-    elif field_name == "rating":
-        tag = soup.select_one(".rating")
-        return tag.text.strip() if tag else "N/A"
-    elif field_name == "reviews":
-        tag = soup.select_one(".reviews")
-        return tag.text.strip() if tag else "N/A"
-    return "N/A"
-
-def export_structured_table(limit=50):
+def export_latest_raw_html(limit=21):
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
-    cursor.execute("SELECT id, model, site, raw_html FROM raw_scrapes ORDER BY id DESC LIMIT ?", (limit,))
+    cursor.execute("""
+        SELECT r.id, r.model, r.site, r.url, r.raw_html, d.price, d.rating, d.review_count, r.scraped_at
+        FROM raw_scrapes r
+        LEFT JOIN dynamic_info d
+        ON r.model = d.model AND r.site = d.site AND r.url = d.url
+        ORDER BY r.id DESC
+        LIMIT ?
+    """, (limit,))
     rows = cursor.fetchall()
     conn.close()
-
     if not rows:
-        print("No rows found")
+        print(" No rows found.")
         return
-
     os.makedirs("exports", exist_ok=True)
-    filename = "exports/iphone_table.html"
-
-    with open(filename, "w", encoding="utf-8") as f:
-        f.write("<!DOCTYPE html>\n<html>\n<head>\n")
-        f.write("<meta charset='utf-8'>\n")
-        f.write("<title>iPhone Data Table</title>\n")
-        f.write("<link href='https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css' rel='stylesheet'>\n")
-        f.write("</head>\n<body class='p-4'>\n")
-        f.write("<h2 class='mb-4 text-center'>iPhone Price, Rating & Reviews</h2>\n")
-        f.write("<div class='table-responsive'>\n")
-        f.write("<table class='table table-bordered table-striped table-hover'>\n")
-        f.write("<thead class='table-dark'><tr>\n")
-        f.write("<th>ID</th><th>Model</th><th>Source</th><th>Price</th><th>Rating</th><th>Reviews</th>\n")
-        f.write("</tr></thead>\n<tbody>\n")
-
+    output_file = "exports/export_with_dynamic.html"
+    with open(output_file, "w", encoding="utf-8") as f:
+        f.write("<!doctype html><html><head><meta charset='utf-8'>")
+        f.write("<title>Exported Competitor Pages</title>")
+        f.write("<style>")
+        f.write("""
+        body{font-family:Arial, sans-serif; margin:20px;}
+        .entry{border:2px solid #ccc; margin:20px 0; padding:12px; border-radius:8px;}
+        .meta{color:#555; font-size:0.95em; margin-bottom:8px;}
+        iframe{width:100%; height:500px; border:1px solid #888;}
+        table{border-collapse:collapse; margin-top:10px;}
+        td,th{border:1px solid #aaa; padding:6px 10px;}
+        th{background:#f4f4f4;}
+        """)
+        f.write("</style></head><body>")
+        f.write("<h1>Exported Raw HTML + Dynamic Data</h1>")
         for row in rows:
-            row_id, model, site, raw_html = row
-            price = extract_field_from_html(raw_html, "price")
-            rating = extract_field_from_html(raw_html, "rating")
-            reviews = extract_field_from_html(raw_html, "reviews")
-            f.write(f"<tr><td>{row_id}</td><td>{html.escape(model)}</td><td>{html.escape(site)}</td><td>{price}</td><td>{rating}</td><td>{reviews}</td></tr>\n")
-
-        f.write("</tbody>\n</table>\n</div>\n</body>\n</html>")
-
-    print(f"Exported {len(rows)} rows → {filename}")
-
+            row_id, model, site, url, raw_html, price, rating, reviews, scraped_at = row
+            f.write("<div class='entry'>")
+            f.write(f"<h2>{model} ({site})</h2>")
+            f.write(f"<div class='meta'>Row {row_id} | Scraped: {scraped_at}</div>")
+            f.write(f"<div><b>URL:</b> <a href='{url}' target='_blank'>{url}</a></div>")
+            f.write("<table><tr><th>Price</th><th>Rating</th><th>Reviews</th></tr>")
+            f.write(f"<tr><td>{price or 'N/A'}</td><td>{rating or 'N/A'}</td><td>{reviews or 'N/A'}</td></tr></table>")
+            f.write("<hr>")
+            safe_html = html.escape(raw_html or "")
+            f.write(f"<iframe srcdoc=\"{safe_html}\"></iframe>")
+            f.write("</div>\n")
+        f.write("</body></html>")
+    print(f" Exported {len(rows)} rows → {output_file}")
 if __name__ == "__main__":
-    export_structured_table(limit=50)
+    limit = int(sys.argv[1]) if len(sys.argv) > 1 and sys.argv[1].isdigit() else 21
+    export_latest_raw_html(limit=limit)
