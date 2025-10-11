@@ -70,7 +70,7 @@ export const Cart = () => {
   const total = subtotal + shipping + tax;
 
   const handleCheckout = () => {
-    navigate('/checkout', { state: { cartItems } });
+    navigate('/checkout', );
   };
 
   if (cartItems.length === 0) {
@@ -93,7 +93,7 @@ export const Cart = () => {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex items-center justify-between mb-8">
-        <h1 className="text-2xl font-bold text-foreground">Shopping Cart</h1>
+        <h1 className="font-display text-2xl md:text-3xl font-bold bg-gradient-to-r from-indigo-600 via-pink-500 to-red-500 bg-clip-text text-transparent">Shopping Cart</h1>
         <Badge variant="secondary">{cartItems.length} items</Badge>
       </div>
 

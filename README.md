@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # React + TypeScript + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
@@ -71,3 +72,7 @@ export default defineConfig([
   },
 ])
 ```
+=======
+# Real-time-competitor-strategy-tracker
+Real-Time Competitor Strategy Tracker for E-commerce (Techierookies — Team Project by Infosys Springboard Interns).
+>>>>>>> 361d5dc00599fe5d8f1d4b5d8ce619fe8c168526
