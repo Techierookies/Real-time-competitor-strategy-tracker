@@ -50,5 +50,5 @@ The trained model was saved to disk for future use.
 Model File: iphone_price_predictor.joblib
 
 **6. How to Use: Interactive Chatbot**
+Run advanced_iphone_chatbot() to start the interactive session. Ask natural language queries like "price for iPhone 16 on Amazon" or "compare iPhone 17 on both" to get ML + Gemini LLM predictions with market analysis. Type 'update' to save predictions to a real-time dashboard, 'dashboard' to view all tracked predictions, or 'quit' to exit.
 
-The final cell of the notebook implements an interactive, LLM-powered chatbot. This bot allows a user to ask for a price prediction in natural language (e.g., "What's the price of an iPhone 16 on Amazon on October 31, 2025?"). The bot parses the query, feeds the necessary features into the saved ML model (iphone_price_predictor.joblib), and returns a precise price prediction.
