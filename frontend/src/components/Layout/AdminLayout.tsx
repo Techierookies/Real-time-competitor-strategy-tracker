@@ -1,6 +1,7 @@
 import { Outlet } from 'react-router-dom';
 import { AdminSidebar } from './AdminSidebar';
 import { AdminHeader } from './AdminHeader';
+import ChatWidget from "./ChatWidget";
 
 export const AdminLayout = () => {
   return (
@@ -20,6 +21,7 @@ export const AdminLayout = () => {
           <Outlet />
         </main>
       </div>
+      <ChatWidget />
     </div>
   );
 };
