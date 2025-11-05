@@ -56,7 +56,7 @@ export const Login = () => {
         <div className="text-center mb-8">
           <Link to="/" className="inline-block">
             <h1 className="font-display text-3xl font-bold bg-gradient-to-r from-indigo-600 to-pink-600 bg-clip-text text-transparent">
-              iPhone Store
+              TrackNexus
             </h1>
           </Link>
           <p className="text-sm text-gray-500 mt-1">Your premium Apple shopping experience</p>

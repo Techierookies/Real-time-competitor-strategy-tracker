@@ -68,7 +68,7 @@ export const Signup = () => {
         <div className="text-center mb-8">
           <Link to="/" className="inline-block">
             <h1 className="font-display text-3xl font-bold bg-gradient-to-r from-indigo-600 to-pink-600 bg-clip-text text-transparent">
-              iPhone Store
+              TrackNexus
             </h1>
           </Link>
         </div>
@@ -83,7 +83,7 @@ export const Signup = () => {
               Create Your Account
             </CardTitle>
             <CardDescription>
-              Join iPhone Store and start shopping for the latest iPhones
+              Join TrackNexus and start shopping for the latest iPhones
             </CardDescription>
           </CardHeader>
           

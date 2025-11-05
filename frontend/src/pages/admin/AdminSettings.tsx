@@ -26,8 +26,8 @@ export const AdminSettings = () => {
   }, [isDark]);
 
   const [settings, setSettings] = useState({
-    storeName: 'iPhone Store India',
-    storeEmail: 'admin@iphonestore.in',
+    storeName: 'TrackNexus India',
+    storeEmail: 'admin@tracknexus.in',
     currency: 'INR',
     gstRate: '18',
     shippingFee: '500',

@@ -18,7 +18,7 @@ export const UserNavbar = () => {
       <div className="container mx-auto px-6 h-16 flex items-center justify-between">
         {/* Logo / Brand */}
         <Link to="/" className="font-display text-2xl font-bold text-gray-900 hover:text-blue-600 transition-colors">
-          iPhone<span className="text-blue-600">Store</span>
+          Track<span className="text-blue-600">Nexus</span>
         </Link>
 
         {/* Navigation Links */}

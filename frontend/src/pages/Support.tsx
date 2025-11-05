@@ -76,7 +76,7 @@ export const Support = () => {
                 </div>
                 <div>
                   <h3 className="font-medium text-gray-900">Email Support</h3>
-                  <p className="text-sm text-gray-600">support@iphonestore.com</p>
+                  <p className="text-sm text-gray-600">support@tracknexus.com</p>
                   <p className="text-xs text-gray-500">Response within 24 hours</p>
                 </div>
               </div>

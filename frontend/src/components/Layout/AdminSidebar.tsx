@@ -28,7 +28,7 @@ export const AdminSidebar = () => {
       {/* Header */}
       <div className="p-6 border-b border-gray-200">
         <h1 className="text-2xl font-bold text-gray-900">Admin Panel</h1>
-        <p className="text-sm text-gray-600 mt-1">iPhone Store Admin</p>
+        <p className="text-sm text-gray-600 mt-1">TrackNexus Admin</p>
       </div>
 
       {/* Navigation */}

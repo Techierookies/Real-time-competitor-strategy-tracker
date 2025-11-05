@@ -59,7 +59,7 @@ export const Privacy = () => {
             <p className="text-foreground/80 leading-relaxed">
               You have the right to access, correct, or delete your personal information. You may 
               also object to or restrict certain processing of your data. To exercise these rights, 
-              please contact us at privacy@iphone-store.com.
+              please contact us at privacy@tracknexus.com.
             </p>
           </section>
 
@@ -83,7 +83,7 @@ export const Privacy = () => {
             <h2 className="text-2xl font-semibold">Contact Us</h2>
             <p className="text-foreground/80 leading-relaxed">
               If you have any questions about this Privacy Policy, please contact us at 
-              privacy@iphone-store.com or call us at 1-800-MY-IPHONE.
+              privacy@tracknexus.com or call us at 1-800-MY-IPHONE.
             </p>
           </section>
         </div>
