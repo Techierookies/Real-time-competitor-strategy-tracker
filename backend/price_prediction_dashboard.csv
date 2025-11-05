@@ -1,3 +1,3 @@
 DateTime,Model,Source,ML_Predicted,Gemini_Predicted,Current_Price,Current_Timestamp,Current_Rating,Optimal_Price,Analysis,Review
-2025-11-04 18:27:58,iPhone 16,Amazon,"₹91,501","₹84,900","₹91,501",2025-11-04 18:26:32,4.0,"₹91,501","📊 Market: Bullish. The current price is holding strong at ₹91,501, with the ML m",
-2025-11-04 18:27:58,iPhone 16,Flipkart,"₹92,951","₹76,500","₹92,951",2025-11-04 18:27:36,4.0,"₹92,951","📊 Market: Bearish, as Gemini's analysis suggests a significantly lower fair valu",
+2025-11-05 11:12:23,iPhone 16,Amazon,"₹92,456","₹74,900","₹92,456",2025-11-05 11:11:35,4.0,"₹92,456",📊 Market: Bearish. Gemini's significantly lower price target indicates a strong ,
+2025-11-05 11:12:23,iPhone 16,Flipkart,"₹93,856","₹67,000","₹93,856",2025-11-05 11:12:06,4.0,"₹93,856","📊 Market: Bearish, driven by Gemini's significantly lower market analysis sugges",

@@ -20,6 +20,8 @@ from model.llm import (
 )
 from datetime import datetime
 from admin_routes import router as admin_router
+from refresh_scraper import run_refresh_scraper
+
 # ----------------------------
 # FASTAPI App
 # ----------------------------
@@ -199,18 +201,60 @@ def get_dashboard_data():
     except Exception as e:
         return {"status": "error", "message": str(e)}
     
-# ----------------------------
-# refresh dashboard endpoint
-# ----------------------------    
+# # ----------------------------
+# # refresh dashboard endpoint
+# # ----------------------------    
 
+# @app.post("/api/refresh_dashboard")
+# def refresh_dashboard():
+#     from model.chatbot import export_dashboard  # ya jahan se update hoti hai
+#     try:
+#         export_dashboard("price_prediction_dashboard.csv")
+#         return {"message": "Dashboard refreshed and prices updated!"}
+#     except Exception as e:
+#         return {"message": f"Error refreshing: {e}"}
+
+# ----------------------------
+# Refresh dashboard + trigger email alert
+# ----------------------------
+# @app.post("/api/refresh_dashboard")
+# def refresh_dashboard_and_scraper():
+#     from model.chatbot import export_dashboard  # dashboard update ke liye
+
+#     try:
+#         # 1️⃣ Dashboard refresh karo
+#         export_dashboard("price_prediction_dashboard.csv")
+
+#         # 2️⃣ Competitor scraper run karo (email alert)
+#         scraper_result = run_refresh_scraper()
+
+#         return {
+#             "status": "success",
+#             "message": "✅ Dashboard refreshed and competitor scraper executed!",
+#             "scraper_status": scraper_result
+#         }
+
+#     except Exception as e:
+#         return {"status": "error", "message": f"⚠️ Error refreshing data: {str(e)}"}
 @app.post("/api/refresh_dashboard")
 def refresh_dashboard():
-    from model.chatbot import export_dashboard  # ya jahan se update hoti hai
+    from model.chatbot import export_dashboard
+    from refresh_scraper import run_scraper_in_background
+
     try:
+        # 1️⃣ Update dashboard
         export_dashboard("price_prediction_dashboard.csv")
-        return {"message": "Dashboard refreshed and prices updated!"}
+
+        # 2️⃣ Run scraper + email alerts in background (non-blocking)
+        run_scraper_in_background()
+
+        return {
+            "message": "Dashboard refreshed & email scraper started!",
+            "status": "success"
+        }
     except Exception as e:
-        return {"message": f"Error refreshing: {e}"}
+        return {"message": f"Error refreshing: {e}", "status": "error"}
+
 
 # ============================================================
 # 🛒 STORE PRODUCT MANAGEMENT ENDPOINTS (Add + Get + Update + Delete)
@@ -299,6 +343,40 @@ def delete_store_product(product_id: int):
         cursor.execute("DELETE FROM store_products WHERE id=?", (product_id,))
         conn.commit()
         return {"status": "success", "message": "🗑️ Store product deleted successfully!"}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+# ----------------------------
+# Review endpoint
+# ----------------------------
+@app.get("/api/synthetic-reviews/{model_name}")
+def get_synthetic_reviews(model_name: str):
+    import pandas as pd
+    import numpy as np
+
+    try:
+        df = pd.read_csv("model/enhanced_synthetic_dataset_with_timestamps.csv")
+
+        # Filter model specific reviews
+        reviews_df = df[df["Model"].str.lower() == model_name.lower()]
+
+        if reviews_df.empty:
+            return {"status": "error", "message": "No synthetic reviews found for this model."}
+
+        # Select top 5 reviews randomly for variety
+        reviews_df = reviews_df.sample(min(5, len(reviews_df)))
+
+        reviews = [
+            {
+                "source": row["Source"],
+                "rating": row.get("Rating", 4.0),
+                "review": row.get("Reviews", "Great product overall!")
+            }
+            for _, row in reviews_df.iterrows()
+        ]
+
+        return {"status": "success", "reviews": reviews}
+
     except Exception as e:
         return {"status": "error", "message": str(e)}
 

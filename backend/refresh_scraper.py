@@ -261,3 +261,34 @@ async def refresh_all():
 if __name__ == "__main__":
     asyncio.run(refresh_all())
     
+
+
+# ---------------------------------------
+# Entry point
+# ---------------------------------------
+
+def run_refresh_scraper():
+    """Runs the async refresh_all() safely from FastAPI or CLI."""
+    try:
+        asyncio.run(refresh_all())
+    except Exception as e:
+        print("Error running refresh scraper:", e)
+        return {"status": "error", "message": str(e)}
+    return {"status": "success", "message": "Refresh completed successfully"}
+
+if __name__ == "__main__":
+    run_refresh_scraper()
+
+import threading
+
+def run_scraper_in_background():
+    """Run the scraper safely without blocking FastAPI."""
+    def _run():
+        try:
+            asyncio.run(refresh_all())
+        except Exception as e:
+            print("Background scraper error:", e)
+    thread = threading.Thread(target=_run)
+    thread.start()
+    return {"status": "started"}
+

@@ -1,30 +1,46 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Check, X, Star, Trash2 } from "lucide-react";
 import { Card } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
 import { useToast } from "../../hooks/use-toast";
 
 interface Review {
-  id: string;
-  product: string;
-  customer: string;
+  source: string;
   rating: number;
-  comment: string;
-  status: "pending" | "approved" | "rejected";
-  date: string;
+  review: string;
 }
 
 export const AdminReviews = () => {
   const { toast } = useToast();
   const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "approved" | "rejected">("all");
   const [searchQuery, setSearchQuery] = useState("");
-  const [reviews, setReviews] = useState<Review[]>([
-    { id: "1", product: "iPhone 15 Pro Max", customer: "Amit Patel", rating: 5, comment: "Amazing phone! Best iPhone yet. Camera quality is incredible.", status: "approved", date: "2024-01-20" },
-    { id: "2", product: "iPhone 15 Pro", customer: "Rajesh Kumar", rating: 4, comment: "Great device but a bit expensive. Love the titanium design.", status: "approved", date: "2024-01-19" },
-    { id: "3", product: "iPhone 15", customer: "Priya SHarma", rating: 3, comment: "Good phone but expected more for the price.", status: "pending", date: "2024-01-18" },
-    { id: "4", product: "iphone 16", customer: "Sneha Reddy", rating: 5, comment: "Best Phone ever! Camera Quality is perfect.", status: "approved", date: "2024-01-17" },
-    { id: "5", product: "iPhone 14", customer: "Priyanshi Agarwal", rating: 1, comment: "Terrible product. Complete waste of money!!!", status: "pending", date: "2024-01-16" },
-  ]);
+  const [reviews, setReviews] = useState<(Review & { id: string; status: string; date: string })[]>([]);
+  const [model, setModel] = useState("iPhone 16");
+
+  // ✅ Fetch reviews dynamically from FastAPI
+  useEffect(() => {
+    const fetchReviews = async () => {
+      try {
+        const res = await fetch(`http://127.0.0.1:8000/api/synthetic-reviews/${model}`);
+        const data = await res.json();
+        if (data.status === "success") {
+          // Adding fake IDs + default status for UI consistency
+          const enhanced = data.reviews.map((r: Review, idx: number) => ({
+            ...r,
+            id: `${idx + 1}`,
+            status: "approved",
+            date: new Date().toISOString().split("T")[0],
+          }));
+          setReviews(enhanced);
+        } else {
+          toast({ title: "Error", description: data.message || "No reviews found." });
+        }
+      } catch (err) {
+        toast({ title: "Error", description: "Failed to fetch reviews." });
+      }
+    };
+    fetchReviews();
+  }, [model]);
 
   const approveReview = (id: string) => {
     setReviews(reviews.map(r => r.id === id ? { ...r, status: "approved" } : r));
@@ -55,8 +71,8 @@ export const AdminReviews = () => {
 
   const filteredReviews = reviews.filter(review => {
     const matchesSearch =
-      review.product.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      review.customer.toLowerCase().includes(searchQuery.toLowerCase());
+      review.review.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      review.source.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesStatus = statusFilter === "all" || review.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
@@ -99,11 +115,25 @@ export const AdminReviews = () => {
         </div>
       </div>
 
+      {/* Model Dropdown */}
+      <div className="flex items-center gap-4">
+        <label className="font-medium">Select Model:</label>
+        <select
+          value={model}
+          onChange={(e) => setModel(e.target.value)}
+          className="p-2 border rounded-lg"
+        >
+          <option value="iPhone 15">iPhone 15</option>
+          <option value="iPhone 16">iPhone 16</option>
+          <option value="iPhone 17">iPhone 17</option>
+        </select>
+      </div>
+
       {/* Search */}
       <div>
         <input
           type="text"
-          placeholder="Search by product or customer..."
+          placeholder="Search by review or source..."
           className="w-full md:w-1/2 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
@@ -119,8 +149,7 @@ export const AdminReviews = () => {
           >
             <div className="flex items-start justify-between mb-3">
               <div>
-                <h3 className="font-semibold text-lg">{review.product}</h3>
-                <p className="text-sm text-gray-600">By {review.customer}</p>
+                <h3 className="font-semibold text-lg">{review.source}</h3>
                 <span
                   className={`inline-block mt-2 text-xs font-medium px-3 py-1 rounded-full ${getStatusColor(
                     review.status
@@ -132,7 +161,7 @@ export const AdminReviews = () => {
               {renderStars(review.rating)}
             </div>
 
-            <p className="text-gray-800 text-sm mb-4">{review.comment}</p>
+            <p className="text-gray-800 text-sm mb-4">{review.review}</p>
             <p className="text-xs text-gray-500 mb-4">Posted on {review.date}</p>
 
             <div className="flex gap-2">
@@ -156,7 +185,7 @@ export const AdminReviews = () => {
                 onClick={() => deleteReview(review.id)}
                 className="flex-1 bg-gray-100 text-gray-700 hover:bg-gray-200"
               >
-                <Trash2 size={16} className="mr-1 bg-red-100 text-red-700 hover:bg-red-200" /> Delete
+                <Trash2 size={16} className="mr-1" /> Delete
               </Button>
             </div>
           </Card>
