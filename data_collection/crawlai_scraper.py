@@ -47,7 +47,6 @@ def ensure_tables():
     """)
     conn.commit()
     conn.close()
-
 def save_raw_scrape(model, site, url, raw_html):
     conn = sqlite3.connect(DB)
     cur = conn.cursor()
@@ -296,11 +295,11 @@ async def process_target(model, site, url):
         # if found, use them
         if p_price:
             price, rating, review_count = p_price, p_rating, p_reviews
-            used = "Playwright(product-pages)"  # note source for logs
+            used = "Playwright(product-pages)"  
 
     print(f"  [{used}] Extracted → price={price}, rating={rating}, reviews={review_count}")
 
-    # Save dynamic info
+
     save_dynamic_info(model, site, url, price, rating, review_count)
 async def main():
     ensure_tables()
