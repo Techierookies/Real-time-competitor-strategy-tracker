@@ -253,11 +253,11 @@ async def refresh_all():
                 print(f"First recorded price for {model}: {price}")
             else:
                 print(f"No significant change for {model} (current {price})")
-
+                
         await browser.close()
+
     conn.close()
     print("Refresh finished.")
 
 if __name__ == "__main__":
     asyncio.run(refresh_all())
-    
