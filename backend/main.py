@@ -240,13 +240,18 @@ def get_dashboard_data():
 def refresh_dashboard():
     from model.chatbot import export_dashboard
     from refresh_scraper import run_scraper_in_background
+    import os
 
     try:
         # 1️⃣ Update dashboard
         export_dashboard("price_prediction_dashboard.csv")
 
+         # ✅ Build absolute DB path
+        base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
+        db_path = os.path.join(base_dir, "competitor_tracker.db")
+
         # 2️⃣ Run scraper + email alerts in background (non-blocking)
-        run_scraper_in_background()
+        run_scraper_in_background(db_path=db_path)
 
         return {
             "message": "Dashboard refreshed & email scraper started!",

@@ -122,11 +122,15 @@ def load_data():
 
         # Try to load real data from GitHub
         try:
-            db_path = 'Real-time-competitor-strategy-tracker/competitor_tracker.db'
+            base_dir = os.path.abspath(os.path.join(os.getcwd(), os.pardir))
+            db_path = os.path.join(base_dir, "competitor_tracker.db")
+
+            if not os.path.exists(db_path):
+                db_path = os.path.join(os.getcwd(), "competitor_tracker.db")
             if os.path.exists(db_path):
                 conn = sqlite3.connect(db_path)
                 df_github = pd.read_sql_query("""
-                    SELECT * FROM raw_scrapes
+                    SELECT * FROM dynamic_info
                     WHERE model IN ('iPhone 15', 'iPhone 16', 'iPhone 17')
                 """, conn)
                 conn.close()
@@ -136,19 +140,21 @@ def load_data():
                         'model': 'Model',
                         'site': 'Source',
                         'price': 'Price',
-                        'reviews': 'Reviews',
+                        'review_count': 'Review_Count',
                         'rating': 'Rating',
                         'url': 'URL'
                     })
                     if 'Scraped_At' not in real_df.columns:
                         real_df['Scraped_At'] = datetime.now()
                     else:
-                        real_df['Scraped_At'] = pd.to_datetime(df_github['scraped_at'])
+                        real_df['Scraped_At'] = pd.to_datetime(df_github['extracted_at'])
 
-                    required_cols = ['Model', 'Source', 'Price', 'Rating', 'Reviews', 'Scraped_At']
+                    required_cols = ['Model', 'Source', 'Price', 'Rating', 'Review_Count', 'Scraped_At']
                     real_df = real_df[required_cols]
 
                     df = pd.concat([df, real_df], ignore_index=True)
+                    print("🧾 df_github columns:", list(df_github.columns))
+
                     print(f"✅ Loaded real data: {len(df_github)} records")
                     print(f"✅ Combined dataset: {len(df)} total records")
                 else:
@@ -182,12 +188,12 @@ def cleanup_data():
     print(f" Removed {initial_rows - len(df)} invalid price records")
 
     # Ensure required columns
-    required_cols = ['Model', 'Source', 'Price', 'Rating', 'Reviews', 'Scraped_At']
+    required_cols = ['Model', 'Source', 'Price', 'Rating', 'Review_Count', 'Scraped_At']
     for col in required_cols:
         if col not in df.columns:
             if col == 'Rating':
                 df[col] = 4.2
-            elif col == 'Reviews':
+            elif col == 'Review_Count':
                 df[col] = "Good product"
             else:
                 df[col] = ""
@@ -195,7 +201,7 @@ def cleanup_data():
     # Convert types
     df['Price'] = df['Price'].astype(float)
     df['Rating'] = pd.to_numeric(df['Rating'], errors='coerce').fillna(4.2)
-    df['Reviews'] = df['Reviews'].astype(str)
+    df['Review_Count'] = df['Review_Count'].astype(str)
     df['Scraped_At'] = pd.to_datetime(df['Scraped_At'], errors='coerce')
     df = df.dropna(subset=['Scraped_At'])
 
@@ -206,37 +212,81 @@ def cleanup_data():
 # HELPER FUNCTIONS
 # ============================================================================
 
+# def get_latest_current_price(model_name, source):
+#     """
+#     Get the LATEST price for a model on a specific source
+#     Based on the most recent timestamp from GitHub database
+#     """
+#     global df_github
+
+#     if df_github is None or len(df_github) == 0:
+#         return None, None, None, None
+
+#     # Filter for model and source
+#     data = df_github[(df_github['model'] == model_name) & (df_github['site'] == source)].copy()
+
+#     if len(data) == 0:
+#         return None, None, None, None
+
+#     # Sort by timestamp descending (most recent first)
+#     data['extracted_at'] = pd.to_datetime(data['extracted_at'])
+#     data = data.sort_values('extracted_at', ascending=False)
+
+#     # Get the LATEST record
+#     latest_record = data.iloc[0]
+
+#     # Extract price as string, convert to float
+#     price_str = str(latest_record['price']).replace(',', '').replace('₹', '')
+#     price = float(price_str) if price_str else 0
+
+#     timestamp = latest_record['extracted_at']
+#     review = latest_record['Review_Count'][:50] if pd.notna(latest_record['Review_Count']) else ""
+#     rating = float(latest_record['rating']) if pd.notna(latest_record['rating']) else 4.0
+
+#     return price, timestamp, review, rating
+
 def get_latest_current_price(model_name, source):
     """
     Get the LATEST price for a model on a specific source
-    Based on the most recent timestamp from GitHub database
+    Based on the most recent timestamp from database
     """
     global df_github
 
     if df_github is None or len(df_github) == 0:
         return None, None, None, None
 
-    # Filter for model and source
+    # Filter data
     data = df_github[(df_github['model'] == model_name) & (df_github['site'] == source)].copy()
-
     if len(data) == 0:
         return None, None, None, None
 
-    # Sort by timestamp descending (most recent first)
-    data['scraped_at'] = pd.to_datetime(data['scraped_at'])
-    data = data.sort_values('scraped_at', ascending=False)
+    # 🧩 Fix: normalize timestamp column
+    if 'extracted_at' in data.columns:
+        data['timestamp'] = pd.to_datetime(data['extracted_at'])
+    elif 'extracted_at' in data.columns:
+        data['timestamp'] = pd.to_datetime(data['extracted_at'])
+    else:
+        print("⚠️ No timestamp column found in df_github!")
+        return None, None, None, None
 
-    # Get the LATEST record
-    latest_record = data.iloc[0]
+    # Sort by latest timestamp
+    data = data.sort_values('timestamp', ascending=False)
 
-    # Extract price as string, convert to float
-    price_str = str(latest_record['price']).replace(',', '').replace('₹', '')
+    latest = data.iloc[0]
+    price_str = str(latest['price']).replace(',', '').replace('₹', '')
     price = float(price_str) if price_str else 0
 
-    timestamp = latest_record['scraped_at']
-    review = latest_record['reviews'][:50] if pd.notna(latest_record['reviews']) else ""
-    rating = float(latest_record['rating']) if pd.notna(latest_record['rating']) else 4.0
+    timestamp = latest['timestamp']
+    review_col = 'review_count' if 'review_count' in latest else None
+    rating_col = 'rating' if 'rating' in latest else None
 
+    review = (
+        str(latest[review_col]) + " reviews"
+        if review_col and pd.notna(latest[review_col])
+        else "No reviews"
+    )
+    rating = float(latest['rating']) if pd.notna(latest['rating']) else 4.0
+    print(f"🧩 [DEBUG] Current price loaded from DB → {model_name} | {source} | ₹{price} | {timestamp}")
     return price, timestamp, review, rating
 
 
@@ -253,7 +303,7 @@ def predict_iphone_price(model_name, source, rating=4.2, review_text="Good phone
         'Model': [model_name],
         'Source': [source],
         'Rating': [rating],
-        'Reviews': [review_text],
+        'Review_Count': [review_text],
         'Scraped_At': [target_date]
     })
 
@@ -272,10 +322,10 @@ def predict_iphone_price(model_name, source, rating=4.2, review_text="Good phone
     pred['IsLaunchSeason'] = pred['Month'].isin([9, 10]).astype(int)
     pred['IsSummerSeason'] = pred['Month'].isin([4, 5, 6]).astype(int)
 
-    pred['ReviewLength'] = pred['Reviews'].str.len()
-    pred['ReviewWordCount'] = pred['Reviews'].str.split().str.len()
-    pred['HasExclamation'] = pred['Reviews'].str.contains('!').astype(int)
-    pred['HasQuestion'] = pred['Reviews'].str.contains('r\?').astype(int)
+    pred['ReviewLength'] = pred['Review_Count'].str.len()
+    pred['ReviewWordCount'] = pred['Review_Count'].str.split().str.len()
+    pred['HasExclamation'] = pred['Review_Count'].str.contains('!').astype(int)
+    pred['HasQuestion'] = pred['Review_Count'].str.contains('r\?').astype(int)
 
     pred['Model_Encoded'] = le_model.transform([model_name])[0]
     pred['Source_Encoded'] = le_source.transform([source])[0]
@@ -441,6 +491,7 @@ def safe_get_optimal_price(model_name, source, ml_price, gemini_price, current_p
         if gemini_price and gemini_price > 0:
             prices.append(gemini_price)
         return float(np.mean(prices))
+
 
 
 # ============================================================================
