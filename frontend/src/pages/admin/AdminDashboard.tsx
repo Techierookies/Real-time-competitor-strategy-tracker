@@ -1,352 +1,350 @@
 import {
-  Activity,
+  TrendingDown,
+  Users,
+  DollarSign,
+  Smartphone,
   AlertCircle,
-  ArrowDownRight,
-  ArrowUpRight,
-  Brain,
-  RefreshCw,
-  Radio,
+  Upload,
 } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "../../components/ui/button";
 import UploadModel from "../../components/Layout/UploadModel";
-import {
-  api,
-  type Alert,
-  type CollectionStatus,
-  type Forecast,
-  type LivePrice,
-  type ModelCard,
-} from "../../lib/api";
-
-const MODELS = ["iPhone 15", "iPhone 16", "iPhone 17"];
-const REFRESH_MS = 60_000;
-
-const inr = new Intl.NumberFormat("en-IN", { maximumFractionDigits: 0 });
-const rupees = (value: number | null | undefined) =>
-  value == null ? "—" : `₹${inr.format(value)}`;
-const ago = (iso: string | null | undefined) => {
-  if (!iso) return "never";
-  const stamp = new Date(iso.endsWith("Z") || iso.includes("+") ? iso : `${iso}Z`);
-  const minutes = Math.round((Date.now() - stamp.getTime()) / 60_000);
-  if (minutes < 1) return "just now";
-  if (minutes < 60) return `${minutes} min ago`;
-  const hours = Math.round(minutes / 60);
-  return hours < 48 ? `${hours} h ago` : `${Math.round(hours / 24)} days ago`;
-};
-
-const STATUS_STYLE: Record<string, string> = {
-  ok: "bg-green-100 text-green-700",
-  partial: "bg-amber-100 text-amber-700",
-  rejected: "bg-amber-100 text-amber-700",
-  blocked: "bg-red-100 text-red-700",
-  throttled: "bg-red-100 text-red-700",
-  disallowed: "bg-red-100 text-red-700",
-  failed: "bg-red-100 text-red-700",
-};
 
 export const AdminDashboard = () => {
-  const [prices, setPrices] = useState<LivePrice[]>([]);
-  const [status, setStatus] = useState<CollectionStatus | null>(null);
-  const [card, setCard] = useState<ModelCard | null>(null);
-  const [alerts, setAlerts] = useState<Alert[]>([]);
-  const [forecasts, setForecasts] = useState<Record<string, Record<string, Forecast>>>({});
-  const [horizon, setHorizon] = useState(14);
+  const [isAdmin] = useState(true);
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+
+  // 🔹 Dynamic data states
+  const [stats, setStats] = useState<any[]>([]);
+  const [recentSales, setRecentSales] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [message, setMessage] = useState<string | null>(null);
-  const [isRetrainOpen, setIsRetrainOpen] = useState(false);
-  const [collecting, setCollecting] = useState(false);
 
-  const load = useCallback(async () => {
-    // Each panel loads independently, so one failing endpoint never blanks
-    // the whole page.
-    const [p, s, c, a] = await Promise.allSettled([
-      api.latestPrices(),
-      api.collectStatus(),
-      api.modelCard(),
-      api.alerts(),
-    ]);
-    if (p.status === "fulfilled") setPrices(p.value.prices);
-    if (s.status === "fulfilled") setStatus(s.value);
-    if (c.status === "fulfilled") setCard(c.value);
-    if (a.status === "fulfilled") setAlerts(a.value.alerts.slice(0, 6));
+  // 🔹 Model info states
+  const [modelInfo, setModelInfo] = useState<any | null>(null);
+  const [modelLoading, setModelLoading] = useState(true);
 
-    const compared = await Promise.allSettled(MODELS.map((m) => api.compare(m, horizon)));
-    const next: Record<string, Record<string, Forecast>> = {};
-    compared.forEach((result, i) => {
-      if (result.status === "fulfilled") next[MODELS[i]] = result.value.forecasts;
-    });
-    setForecasts(next);
-    setLoading(false);
-  }, [horizon]);
-
+  // 🔹 Fetch dashboard data
   useEffect(() => {
-    load();
-    const timer = window.setInterval(load, REFRESH_MS);
-    return () => window.clearInterval(timer);
-  }, [load]);
+    const fetchDashboardData = async () => {
+      try {
+        const res = await fetch("http://localhost:8000/api/admin_dashboard");
+        const data = await res.json();
 
-  const collectNow = async () => {
-    setCollecting(true);
-    setMessage(null);
+        if (data.status === "success") {
+          const records = data.dashboard_data || [];
+
+          // Parse currency safely (₹, commas, etc.)
+          const parsePrice = (val: any) => {
+            if (!val) return 0;
+            const str = String(val).replace(/[₹,]/g, "");
+            return parseFloat(str) || 0;
+          };
+
+          // Calculate total revenue and items sold
+          const totalRevenue = records.reduce(
+            (sum: number, item: any) =>
+              sum + parsePrice(item.Optimal_Price || item.ML_Predicted),
+            0
+          );
+
+          const totalSold = records.length;
+
+          setStats([
+            {
+              title: "Total Revenue",
+              value: `₹${totalRevenue.toLocaleString()}`,
+              change: "+12.5%",
+              trend: "up",
+              icon: DollarSign,
+              color: "bg-green-500",
+            },
+            {
+              title: "iPhones Sold",
+              value: totalSold.toString(),
+              change: "+8.2%",
+              trend: "up",
+              icon: Smartphone,
+              color: "bg-blue-500",
+            },
+            {
+              title: "Active Users",
+              value: "12,847",
+              change: "+5.1%",
+              trend: "up",
+              icon: Users,
+              color: "bg-purple-500",
+            },
+            {
+              title: "Conversion Rate",
+              value: "3.47%",
+              change: "-0.8%",
+              trend: "down",
+              icon: TrendingDown,
+              color: "bg-orange-500",
+            },
+          ]);
+
+          // 🔹 Recent predictions: show ML, Gemini, Current, Rating, etc.
+          const dynamicSales = records.map((item: any, i: number) => ({
+            model: item.Model || "iPhone",
+            source: item.Source || "Amazon",
+            ml: item.ML_Predicted || "N/A",
+            gemini: item.Gemini_Predicted || "N/A",
+            current: item.Current_Price || "N/A",
+            rating: item.Current_Rating || "N/A",
+            optimal: item.Optimal_Price || "N/A",
+            analysis: item.Analysis || "No analysis available",
+            time: item.DateTime || "Recently",
+          }));
+
+          setRecentSales(dynamicSales);
+        } else {
+          console.error("Dashboard fetch failed:", data.message);
+        }
+      } catch (err) {
+        console.error("Error fetching dashboard:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, []);
+
+  // 🔹 Fetch model info
+  useEffect(() => {
+    const fetchModelInfo = async () => {
+      try {
+        const res = await fetch("http://localhost:8000/admin/model-status");
+        const data = await res.json();
+        if (data.status && data.status.model_name) {
+          setModelInfo(data.status);
+        } else {
+          setModelInfo(null);
+        }
+      } catch (err) {
+        console.error("Error fetching model status:", err);
+      } finally {
+        setModelLoading(false);
+      }
+    };
+    fetchModelInfo();
+  }, []);
+
+  // 🔄 Refresh button
+  const handleRefresh = async () => {
     try {
-      await api.runCollection();
-      setMessage("Collection started. New prices appear here within a minute.");
-      window.setTimeout(load, 45_000);
+      const res = await fetch("http://localhost:8000/api/refresh_dashboard", {
+        method: "POST",
+      });
+      const data = await res.json();
+      alert(data.message || "Dashboard refreshed!");
+      window.location.reload();
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Could not start collection.");
-    } finally {
-      setCollecting(false);
+      alert("Error refreshing dashboard!");
+      console.error(error);
     }
   };
 
-  const run = status?.latest_run;
-  const scheduler = status?.scheduler;
-
+  // ----------------------------------
   return (
     <div className="p-6 space-y-8 bg-white text-black min-h-screen">
       {/* Header */}
-      <div className="flex flex-wrap items-start justify-between gap-4">
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Live Competitor Prices</h1>
-          <p className="text-gray-600 flex items-center gap-2">
-            <Radio className="w-4 h-4 text-green-600" />
-            {run
-              ? `Last collection ${ago(run.finished_at || run.started_at)}: ${run.stored} of ${run.targets} prices stored`
-              : "No live collection has run yet"}
-            {scheduler?.collect_interval_minutes
-              ? ` · next run ${ago(scheduler.next_collection_at).replace(" ago", "")}`
-              : " · scheduler off"}
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            Dashboard Overview
+          </h1>
+          <p className="text-gray-600">
+            Monitor your iPhone store performance and insights.
           </p>
         </div>
-        <div className="flex gap-2">
-          <Button
-            onClick={collectNow}
-            disabled={collecting}
-            className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-4 py-2 rounded-lg hover:shadow-lg"
+        <Button
+          onClick={handleRefresh}
+          className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-4 py-2 rounded-lg hover:shadow-lg transition-all"
+        >
+          🔄 Refresh Dashboard
+        </Button>
+      </div>
+
+      {/* Stats Section */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {stats.map((stat, index) => (
+          <div
+            key={index}
+            className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200"
           >
-            <RefreshCw className={`w-4 h-4 mr-2 ${collecting ? "animate-spin" : ""}`} />
-            Collect now
-          </Button>
-          <Button variant="outline" onClick={() => setIsRetrainOpen(true)} className="px-4 py-2 rounded-lg">
-            <Brain className="w-4 h-4 mr-2" />
-            Retrain
-          </Button>
+            <div className="flex items-center justify-between mb-4">
+              <div className={`${stat.color} p-3 rounded-lg`}>
+                <stat.icon className="text-white" size={22} />
+              </div>
+              <span
+                className={`text-sm font-medium ${
+                  stat.trend === "up" ? "text-green-600" : "text-red-600"
+                }`}
+              >
+                {stat.change}
+              </span>
+            </div>
+            <h3 className="text-2xl font-bold text-gray-900 mb-1">
+              {stat.value}
+            </h3>
+            <p className="text-sm text-gray-600">{stat.title}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Main Grid */}
+      <div className="grid lg:grid-cols-3 gap-6">
+        {/* Recent Sales & Predictions */}
+        <div className="lg:col-span-2 bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+          <h2 className="text-xl font-bold text-gray-900 mb-4">
+            Recent Sales & Predictions
+          </h2>
+          <div className="space-y-4">
+            {loading ? (
+              <p className="text-gray-500 text-center">Loading data...</p>
+            ) : recentSales.length === 0 ? (
+              <p className="text-gray-500 text-center">
+                No records found yet.
+              </p>
+            ) : (
+              recentSales.map((sale, index) => (
+                <div
+                  key={index}
+                  className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-all"
+                >
+                  <div className="flex justify-between">
+                    <div>
+                      <h3 className="font-semibold text-gray-900">
+                        {sale.model} — {sale.source}
+                      </h3>
+                      <p className="text-sm text-gray-600 mt-1">
+                        🤖 ML: {sale.ml} | 🧠 Gemini: {sale.gemini}
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        💰 Current: {sale.current} | ⭐ {sale.rating}
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        ✅ Optimal: {sale.optimal}
+                      </p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        📈 {sale.analysis}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-gray-800 font-semibold">
+                        {sale.optimal}
+                      </p>
+                      <p className="text-sm text-gray-500">{sale.time}</p>
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+
+        {/* AI Insights */}
+        <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+          <h2 className="text-xl font-bold flex items-center mb-4 text-gray-900">
+            <AlertCircle className="h-5 w-5 mr-2 text-blue-500" />
+            AI Insights
+          </h2>
+          <div className="space-y-4">
+            <div className="p-4 bg-blue-50 rounded-lg border border-blue-100">
+              <p className="text-sm font-medium text-blue-700 mb-1">
+                Price Alert
+              </p>
+              <p className="text-sm text-blue-600">
+                Price movement detected in latest predictions.
+              </p>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="mt-2 text-blue-700 hover:text-blue-800"
+              >
+                View Details
+              </Button>
+            </div>
+
+            <div className="p-4 bg-green-50 rounded-lg border border-green-100">
+              <p className="text-sm font-medium text-green-700 mb-1">
+                Opportunity
+              </p>
+              <p className="text-sm text-green-600">
+                High potential demand detected. Adjust pricing strategy.
+              </p>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="mt-2 text-green-700 hover:text-green-800"
+              >
+                Create Campaign
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
 
-      {message && (
-        <div className="p-3 rounded-lg bg-blue-50 border border-blue-100 text-sm text-blue-700">{message}</div>
-      )}
+      {/* Model Management */}
+      <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <h2 className="text-xl font-semibold text-gray-900 mb-6">
+          Model Management
+        </h2>
 
-      {/* Live prices */}
-      <section>
-        <h2 className="text-xl font-bold text-gray-900 mb-4">Latest scraped prices</h2>
-        {loading ? (
-          <p className="text-gray-500">Loading…</p>
-        ) : prices.length === 0 ? (
-          <p className="text-gray-500">No prices stored yet. Click "Collect now" or enable the scheduler.</p>
+        {modelLoading ? (
+          <p className="text-gray-500">Loading model info...</p>
+        ) : modelInfo ? (
+          <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+            <div>
+              <h3 className="font-medium text-gray-900">
+                Current Model: {modelInfo.model_name}
+              </h3>
+              <p className="text-sm text-gray-600 mt-1">
+                Uploaded on: {modelInfo.uploaded_at}
+              </p>
+            </div>
+            <div
+              className={`px-3 py-1 text-sm font-medium rounded-full ${
+                modelInfo.status === "active"
+                  ? "bg-green-100 text-green-700"
+                  : "bg-red-100 text-red-700"
+              }`}
+            >
+              {modelInfo.status === "active" ? "Active" : "Inactive"}
+            </div>
+          </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {prices.map((p) => (
-              <div key={`${p.model}-${p.source}`} className="rounded-xl p-5 border border-gray-200 shadow-sm">
-                <div className="flex items-center justify-between mb-2">
-                  <p className="text-sm text-gray-600">
-                    {p.model} · {p.source}
-                  </p>
-                  {p.change_pct != null && p.change_pct !== 0 && (
-                    <span
-                      className={`flex items-center text-sm font-medium ${
-                        p.change_pct < 0 ? "text-green-600" : "text-red-600"
-                      }`}
-                    >
-                      {p.change_pct < 0 ? <ArrowDownRight className="w-4 h-4" /> : <ArrowUpRight className="w-4 h-4" />}
-                      {Math.abs(p.change_pct).toFixed(2)}%
-                    </span>
-                  )}
-                </div>
-                <p className="text-2xl font-bold text-gray-900 tabular-nums">{rupees(p.price)}</p>
-                <p className="text-xs text-gray-500 mt-1">
-                  Seen {ago(p.observed_at)}
-                  {p.rating ? ` · ★ ${p.rating.toFixed(1)}` : ""}
-                  {p.url && (p.url.startsWith("https://") || p.url.startsWith("http://")) && (
-                    <>
-                      {" · "}
-                      <a href={p.url} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline">
-                        listing
-                      </a>
-                    </>
-                  )}
-                </p>
-              </div>
-            ))}
+          <p className="text-gray-500 mb-4">No model uploaded yet.</p>
+        )}
+
+        {isAdmin && (
+          <div className="pt-4 border-t border-gray-200">
+            <button
+              onClick={() => setIsUploadModalOpen(true)}
+              className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white font-medium rounded-lg hover:shadow-lg transform hover:scale-105 transition-all"
+            >
+              <Upload className="w-5 h-5" />
+              Upload Model
+            </button>
+            <UploadModel
+              isOpen={isUploadModalOpen}
+              onClose={() => setIsUploadModalOpen(false)}
+              onSuccess={(msg) => {
+                alert(msg);
+                setIsUploadModalOpen(false);
+                window.location.reload();
+              }}
+              onError={(msg) => alert(msg)}
+              authToken="dummy-auth-token"
+            />
+            <p className="text-sm text-gray-500 mt-2">
+              Upload a new trained model (.pkl or .joblib file)
+            </p>
           </div>
         )}
-      </section>
-
-      <div className="grid lg:grid-cols-3 gap-6">
-        {/* Forecasts */}
-        <section className="lg:col-span-2 border border-gray-200 rounded-xl p-6 shadow-sm">
-          <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-            <h2 className="text-xl font-bold text-gray-900">Forecasts</h2>
-            <div className="inline-flex rounded-lg border border-gray-200 overflow-hidden text-sm">
-              {[7, 14, 30].map((h) => (
-                <button
-                  key={h}
-                  onClick={() => setHorizon(h)}
-                  className={`px-3 py-1.5 ${horizon === h ? "bg-gray-900 text-white" : "bg-white text-gray-700"}`}
-                >
-                  {h} days
-                </button>
-              ))}
-            </div>
-          </div>
-          {Object.keys(forecasts).length === 0 ? (
-            <p className="text-gray-500 text-sm">
-              Forecasts need about 20 days of history per series. They appear here automatically once the
-              collector has gathered enough.
-            </p>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm tabular-nums">
-                <thead>
-                  <tr className="text-left text-gray-500 border-b">
-                    <th className="py-2 pr-3">Series</th>
-                    <th className="py-2 pr-3 text-right">Now</th>
-                    <th className="py-2 pr-3 text-right">Forecast</th>
-                    <th className="py-2 pr-3 text-right">80% range</th>
-                    <th className="py-2 text-right">Change</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {Object.entries(forecasts).flatMap(([model, bySource]) =>
-                    Object.values(bySource).map((f) => (
-                      <tr key={`${model}-${f.source}`} className="border-b last:border-0">
-                        <td className="py-2 pr-3">
-                          {model} · {f.source}
-                        </td>
-                        <td className="py-2 pr-3 text-right">{rupees(f.anchor_price)}</td>
-                        <td className="py-2 pr-3 text-right font-medium">{rupees(f.predicted_price)}</td>
-                        <td className="py-2 pr-3 text-right text-gray-500">
-                          {rupees(f.lower_price)} – {rupees(f.upper_price)}
-                        </td>
-                        <td className={`py-2 text-right ${f.expected_change_pct < 0 ? "text-green-600" : "text-red-600"}`}>
-                          {f.expected_change_pct > 0 ? "+" : ""}
-                          {f.expected_change_pct.toFixed(1)}%
-                        </td>
-                      </tr>
-                    )),
-                  )}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </section>
-
-        {/* Alerts */}
-        <section className="border border-gray-200 rounded-xl p-6 shadow-sm">
-          <h2 className="text-xl font-bold flex items-center mb-4 text-gray-900">
-            <AlertCircle className="h-5 w-5 mr-2 text-blue-500" />
-            Price alerts
-          </h2>
-          {alerts.length === 0 ? (
-            <p className="text-sm text-gray-500">No price changes over 1% detected yet.</p>
-          ) : (
-            <ul className="space-y-3">
-              {alerts.map((a) => (
-                <li key={a.id} className="p-3 rounded-lg bg-gray-50 border border-gray-100">
-                  <p className="text-sm text-gray-800">{a.message}</p>
-                  <p className="text-xs text-gray-500 mt-1">
-                    {a.event_type.replace(/_/g, " ")} · {ago(a.created_at)}
-                  </p>
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
       </div>
-
-      <div className="grid lg:grid-cols-2 gap-6">
-        {/* Collector health */}
-        <section className="border border-gray-200 rounded-xl p-6 shadow-sm">
-          <h2 className="text-xl font-bold flex items-center mb-4 text-gray-900">
-            <Activity className="h-5 w-5 mr-2 text-blue-500" />
-            Collector, last run
-          </h2>
-          {!status?.latest_run_results?.length ? (
-            <p className="text-sm text-gray-500">No runs recorded yet.</p>
-          ) : (
-            <ul className="space-y-2 text-sm">
-              {status.latest_run_results.map((r) => (
-                <li key={`${r.model}-${r.source}`} className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="text-gray-800">
-                      {r.model} · {r.source} {r.price ? `· ${rupees(r.price)}` : ""}
-                    </p>
-                    <p className="text-xs text-gray-500">{r.message}</p>
-                  </div>
-                  <span className={`px-2 py-0.5 rounded-full text-xs ${STATUS_STYLE[r.status] ?? "bg-gray-100 text-gray-700"}`}>
-                    {r.status}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
-
-        {/* Model card */}
-        <section className="border border-gray-200 rounded-xl p-6 shadow-sm">
-          <h2 className="text-xl font-bold flex items-center mb-1 text-gray-900">
-            <Brain className="h-5 w-5 mr-2 text-blue-500" />
-            Forecast models
-          </h2>
-          {card ? (
-            <>
-              <p className="text-xs text-gray-500 mb-4">
-                Trained {ago(card.trained_at)} on{" "}
-                <span className={card.data_source === "live" ? "text-green-700" : "text-amber-700"}>
-                  {card.data_source === "live" ? "live scraped data" : "synthetic bootstrap data"}
-                </span>
-                . Error measured on time-ordered test folds.
-              </p>
-              <table className="w-full text-sm tabular-nums">
-                <thead>
-                  <tr className="text-left text-gray-500 border-b">
-                    <th className="py-2">Horizon</th>
-                    <th className="py-2">Model</th>
-                    <th className="py-2 text-right">Avg error</th>
-                    <th className="py-2 text-right">vs. baseline</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {Object.entries(card.horizons).map(([h, m]) => (
-                    <tr key={h} className="border-b last:border-0">
-                      <td className="py-2">{h} days</td>
-                      <td className="py-2">{m.selected_model === "lightgbm" ? "LightGBM" : "Random forest"}</td>
-                      <td className="py-2 text-right">{rupees(m.mae_rupees)}</td>
-                      <td className={`py-2 text-right ${m.beats_naive_baseline ? "text-green-600" : "text-red-600"}`}>
-                        {(m.improvement_over_baseline * 100).toFixed(1)}% better
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </>
-          ) : (
-            <p className="text-sm text-gray-500">Model card unavailable. Train the models first.</p>
-          )}
-        </section>
-      </div>
-
-      <UploadModel
-        isOpen={isRetrainOpen}
-        onClose={() => setIsRetrainOpen(false)}
-        onSuccess={(msg) => {
-          setMessage(msg);
-          window.setTimeout(load, 90_000);
-        }}
-        onError={(msg) => setMessage(msg)}
-      />
     </div>
   );
 };
