@@ -21,6 +21,7 @@ import {
   DialogTrigger,
 } from "../../components/ui/dialog";
 import { Label } from "../../components/ui/label";
+import { api } from "../../lib/api";
 
 interface Product {
   id: number;
@@ -49,18 +50,16 @@ export const AdminProducts = () => {
     status: "active",
   });
 
-  // ✅ Fetch all products
+  const describe = (error: unknown, fallback: string) =>
+    error instanceof Error ? error.message : fallback;
+
+  // Fetch the catalogue (the API pages results; 200 covers a store catalogue).
   const fetchProducts = async () => {
     try {
-      const res = await fetch("http://localhost:8000/api/store-products");
-      const data = await res.json();
-      if (data.status === "success") {
-        setProducts(data.products);
-      } else {
-        toast({ title: "Error loading products", description: data.message });
-      }
-    } catch {
-      toast({ title: "Server Error", description: "Failed to load products." });
+      const data = await api.products(200, 0);
+      setProducts(data.products as Product[]);
+    } catch (error) {
+      toast({ title: "Error loading products", description: describe(error, "Failed to load products.") });
     }
   };
 
@@ -68,71 +67,51 @@ export const AdminProducts = () => {
     fetchProducts();
   }, []);
 
-  // ✅ Add product
+  // Add product (admin only; the API checks the signed-in role).
   const handleAddProduct = async () => {
     if (!newProduct.name || !newProduct.sku || !newProduct.price) {
       toast({ title: "Missing fields", description: "Please fill all required fields." });
       return;
     }
-
     try {
-      const res = await fetch("http://localhost:8000/api/store-products/add", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: newProduct.name,
-          sku: newProduct.sku,
-          category: newProduct.category || "General",
-          price: parseFloat(newProduct.price),
-          stock: parseInt(newProduct.stock) || 0,
-          status: newProduct.status,
-        }),
+      await api.createProduct({
+        name: newProduct.name,
+        sku: newProduct.sku,
+        category: newProduct.category || "General",
+        price: parseFloat(newProduct.price),
+        stock: parseInt(newProduct.stock) || 0,
+        status: newProduct.status,
       });
-      const data = await res.json();
-      if (data.status === "success") {
-        toast({ title: "✅ Product added successfully!" });
-        setIsAddDialogOpen(false);
-        setNewProduct({ name: "", sku: "", category: "", price: "", stock: "", status: "active" });
-        fetchProducts();
-      } else toast({ title: "Error", description: data.message });
-    } catch {
-      toast({ title: "Network Error", description: "Unable to connect to backend." });
+      toast({ title: "Product added" });
+      setIsAddDialogOpen(false);
+      setNewProduct({ name: "", sku: "", category: "", price: "", stock: "", status: "active" });
+      fetchProducts();
+    } catch (error) {
+      toast({ title: "Could not add product", description: describe(error, "Unable to reach the API.") });
     }
   };
 
-  // ✅ Delete product
+  // Delete product
   const handleDeleteProduct = async (id: number) => {
     if (!confirm("Are you sure you want to delete this product?")) return;
     try {
-      const res = await fetch(`http://localhost:8000/api/store-products/${id}`, {
-        method: "DELETE",
-      });
-      const data = await res.json();
-      if (data.status === "success") {
-        toast({ title: "🗑️ Product deleted successfully!" });
-        fetchProducts();
-      } else toast({ title: "Error", description: data.message });
-    } catch {
-      toast({ title: "Network Error", description: "Failed to delete product." });
+      await api.deleteProduct(id);
+      toast({ title: "Product deleted" });
+      fetchProducts();
+    } catch (error) {
+      toast({ title: "Could not delete product", description: describe(error, "Unable to reach the API.") });
     }
   };
 
-  // ✅ Update stock
+  // Update stock
   const handleUpdateStock = async (id: number) => {
     try {
-      const res = await fetch(`http://localhost:8000/api/store-products/${id}/update`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ stock: editedStock }),
-      });
-      const data = await res.json();
-      if (data.status === "success") {
-        toast({ title: "✅ Stock updated!" });
-        setEditingId(null);
-        fetchProducts();
-      } else toast({ title: "Error", description: data.message });
-    } catch {
-      toast({ title: "Network Error", description: "Failed to update stock." });
+      await api.updateProduct(id, { stock: editedStock });
+      toast({ title: "Stock updated" });
+      setEditingId(null);
+      fetchProducts();
+    } catch (error) {
+      toast({ title: "Could not update stock", description: describe(error, "Unable to reach the API.") });
     }
   };
 

@@ -1,0 +1,59 @@
+name: Collect prices
+
+# Scrapes the product pages in collector/targets.json and pushes the readings
+# to the deployed API. Use this when the API runs on a free tier that sleeps,
+# or when you would rather not run the scraper inside the web process.
+#
+# Needs two repository secrets (Settings > Secrets and variables > Actions):
+#   API_URL          e.g. https://competitor-tracker-api.onrender.com
+#   COLLECTOR_TOKEN  the same value as the API's COLLECTOR_TOKEN
+#
+# Retailers often challenge requests from cloud IP ranges, including GitHub's
+# runners. Blocked runs are logged as "blocked" and simply retried on the next
+# schedule; the collector does not try to get around challenges.
+
+on:
+  schedule:
+    - cron: "17 */6 * * *"   # every six hours, off the top of the hour
+  workflow_dispatch:
+
+concurrency:
+  group: collect-prices
+  cancel-in-progress: false
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Check secrets are configured
+        env:
+          API_URL: ${{ secrets.API_URL }}
+          COLLECTOR_TOKEN: ${{ secrets.COLLECTOR_TOKEN }}
+        run: |
+          if [ -z "$API_URL" ] || [ -z "$COLLECTOR_TOKEN" ]; then
+            echo "::error::Set the API_URL and COLLECTOR_TOKEN repository secrets."
+            exit 1
+          fi
+
+      - name: Wake the API (free tiers sleep when idle)
+        env:
+          API_URL: ${{ secrets.API_URL }}
+        run: curl -fsS --retry 5 --retry-delay 15 "$API_URL/health"
+
+      - name: Scrape and push
+        env:
+          API_URL: ${{ secrets.API_URL }}
+          COLLECTOR_TOKEN: ${{ secrets.COLLECTOR_TOKEN }}
+          SCRAPE_DELAY_SECONDS: "6"
+        run: python -m collector.collect --source live --push-to "$API_URL"

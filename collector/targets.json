@@ -1,0 +1,47 @@
+{
+  "_comment": "One fixed product page per tracked series. Keep the same storage variant on both retailers so prices are comparable. 'expect' words must all appear in the page title, which catches a URL that now redirects to a different product. Edit this file to track other products; no code changes needed.",
+  "targets": [
+    {
+      "model": "iPhone 15",
+      "source": "Amazon",
+      "variant": "128 GB",
+      "url": "https://www.amazon.in/dp/B0CHX2F5QT",
+      "expect": ["iPhone 15", "128"]
+    },
+    {
+      "model": "iPhone 15",
+      "source": "Flipkart",
+      "variant": "128 GB",
+      "url": "https://www.flipkart.com/apple-iphone-15-black-128-gb/p/itm6ac6485515ae4",
+      "expect": ["iPhone 15", "128"]
+    },
+    {
+      "model": "iPhone 16",
+      "source": "Amazon",
+      "variant": "128 GB",
+      "url": "https://www.amazon.in/dp/B0DGHZWBYB",
+      "expect": ["iPhone 16", "128"]
+    },
+    {
+      "model": "iPhone 16",
+      "source": "Flipkart",
+      "variant": "128 GB",
+      "url": "https://www.flipkart.com/apple-iphone-16-black-128-gb/p/itm3c9366c8c93cb",
+      "expect": ["iPhone 16", "128"]
+    },
+    {
+      "model": "iPhone 17",
+      "source": "Amazon",
+      "variant": "256 GB",
+      "url": "https://www.amazon.in/dp/B0FQFYXCC4",
+      "expect": ["iPhone 17", "256"]
+    },
+    {
+      "model": "iPhone 17",
+      "source": "Flipkart",
+      "variant": "256 GB",
+      "url": "https://www.flipkart.com/apple-iphone-17-black-256-gb/p/itmc61b40459dd98",
+      "expect": ["iPhone 17", "256"]
+    }
+  ]
+}

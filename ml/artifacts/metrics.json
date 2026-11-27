@@ -1,0 +1,301 @@
+{
+  "trained_at": "2026-11-20T09:56:48.998330+00:00",
+  "dataset": "data/competitor_prices_synthetic.csv",
+  "data_source": "synthetic",
+  "raw_rows": 6444,
+  "daily_rows": 3222,
+  "date_range": {
+    "start": "2025-04-01 00:00:00",
+    "end": "2026-11-15 00:00:00"
+  },
+  "task": "forecast listed price H days ahead per (model, retailer)",
+  "validation": "rolling-origin expanding window, 5 folds, never shuffled",
+  "horizons": {
+    "7": {
+      "horizon_days": 7,
+      "n_splits": 5,
+      "evaluated_rows": 2650,
+      "models": {
+        "lightgbm": {
+          "mae": 2174.72,
+          "mape": 0.0397,
+          "rmse": 3292.47,
+          "r2": 0.9342
+        },
+        "random_forest": {
+          "mae": 2153.11,
+          "mape": 0.0396,
+          "rmse": 3250.65,
+          "r2": 0.9359
+        },
+        "baseline_persistence": {
+          "mae": 2264.55,
+          "mape": 0.041,
+          "rmse": 3493.72,
+          "r2": 0.9259
+        },
+        "baseline_seasonal_naive": {
+          "mae": 2219.65,
+          "mape": 0.0405,
+          "rmse": 3385.34,
+          "r2": 0.9304
+        }
+      },
+      "lightgbm_improvement_over_best_baseline": 0.0202,
+      "p10_p90_interval_coverage": 0.7283,
+      "p10_p90_nominal_coverage": 0.8,
+      "folds": [
+        {
+          "fold": 1,
+          "train_rows": 530,
+          "test_rows": 530,
+          "test_period_start": "2025-08-11 00:00:00",
+          "test_period_end": "2025-11-20 00:00:00",
+          "lightgbm_mae": 3668.71,
+          "persistence_mae": 3827.64
+        },
+        {
+          "fold": 2,
+          "train_rows": 1060,
+          "test_rows": 530,
+          "test_period_start": "2025-11-20 00:00:00",
+          "test_period_end": "2026-02-16 00:00:00",
+          "lightgbm_mae": 2194.07,
+          "persistence_mae": 2883.11
+        },
+        {
+          "fold": 3,
+          "train_rows": 1590,
+          "test_rows": 530,
+          "test_period_start": "2026-02-17 00:00:00",
+          "test_period_end": "2026-05-16 00:00:00",
+          "lightgbm_mae": 1406.64,
+          "persistence_mae": 1891.41
+        },
+        {
+          "fold": 4,
+          "train_rows": 2120,
+          "test_rows": 530,
+          "test_period_start": "2026-05-16 00:00:00",
+          "test_period_end": "2026-08-12 00:00:00",
+          "lightgbm_mae": 1206.83,
+          "persistence_mae": 1330.03
+        },
+        {
+          "fold": 5,
+          "train_rows": 2650,
+          "test_rows": 530,
+          "test_period_start": "2026-08-12 00:00:00",
+          "test_period_end": "2026-11-08 00:00:00",
+          "lightgbm_mae": 2397.36,
+          "persistence_mae": 1390.59
+        }
+      ],
+      "selection": {
+        "family": "random_forest",
+        "mae": 2153.11,
+        "beats_baseline": true,
+        "improvement_over_best_baseline": 0.03,
+        "ranking": [
+          "random_forest",
+          "lightgbm",
+          "baseline_seasonal_naive",
+          "baseline_persistence"
+        ]
+      },
+      "conformal_offset": 0.008166
+    },
+    "14": {
+      "horizon_days": 14,
+      "n_splits": 5,
+      "evaluated_rows": 2615,
+      "models": {
+        "lightgbm": {
+          "mae": 2250.96,
+          "mape": 0.0411,
+          "rmse": 3303.83,
+          "r2": 0.9333
+        },
+        "random_forest": {
+          "mae": 2182.24,
+          "mape": 0.0401,
+          "rmse": 3236.55,
+          "r2": 0.936
+        },
+        "baseline_persistence": {
+          "mae": 2387.99,
+          "mape": 0.0438,
+          "rmse": 3621.4,
+          "r2": 0.9199
+        },
+        "baseline_seasonal_naive": {
+          "mae": 2254.53,
+          "mape": 0.0415,
+          "rmse": 3332.61,
+          "r2": 0.9321
+        }
+      },
+      "lightgbm_improvement_over_best_baseline": 0.0016,
+      "p10_p90_interval_coverage": 0.7595,
+      "p10_p90_nominal_coverage": 0.8,
+      "folds": [
+        {
+          "fold": 1,
+          "train_rows": 523,
+          "test_rows": 523,
+          "test_period_start": "2025-08-09 00:00:00",
+          "test_period_end": "2025-11-18 00:00:00",
+          "lightgbm_mae": 3663.97,
+          "persistence_mae": 3906.68
+        },
+        {
+          "fold": 2,
+          "train_rows": 1046,
+          "test_rows": 523,
+          "test_period_start": "2025-11-18 00:00:00",
+          "test_period_end": "2026-02-13 00:00:00",
+          "lightgbm_mae": 2740.52,
+          "persistence_mae": 2802.57
+        },
+        {
+          "fold": 3,
+          "train_rows": 1569,
+          "test_rows": 523,
+          "test_period_start": "2026-02-13 00:00:00",
+          "test_period_end": "2026-05-11 00:00:00",
+          "lightgbm_mae": 1549.19,
+          "persistence_mae": 2055.35
+        },
+        {
+          "fold": 4,
+          "train_rows": 2092,
+          "test_rows": 523,
+          "test_period_start": "2026-05-11 00:00:00",
+          "test_period_end": "2026-08-06 00:00:00",
+          "lightgbm_mae": 1391.69,
+          "persistence_mae": 1500.77
+        },
+        {
+          "fold": 5,
+          "train_rows": 2615,
+          "test_rows": 523,
+          "test_period_start": "2026-08-06 00:00:00",
+          "test_period_end": "2026-11-01 00:00:00",
+          "lightgbm_mae": 1909.43,
+          "persistence_mae": 1674.59
+        }
+      ],
+      "selection": {
+        "family": "random_forest",
+        "mae": 2182.24,
+        "beats_baseline": true,
+        "improvement_over_best_baseline": 0.0321,
+        "ranking": [
+          "random_forest",
+          "lightgbm",
+          "baseline_seasonal_naive",
+          "baseline_persistence"
+        ]
+      },
+      "conformal_offset": 0.024545
+    },
+    "30": {
+      "horizon_days": 30,
+      "n_splits": 5,
+      "evaluated_rows": 2535,
+      "models": {
+        "lightgbm": {
+          "mae": 2178.08,
+          "mape": 0.0399,
+          "rmse": 3180.72,
+          "r2": 0.9374
+        },
+        "random_forest": {
+          "mae": 2274.45,
+          "mape": 0.0416,
+          "rmse": 3309.46,
+          "r2": 0.9323
+        },
+        "baseline_persistence": {
+          "mae": 2775.32,
+          "mape": 0.0512,
+          "rmse": 3874.18,
+          "r2": 0.9072
+        },
+        "baseline_seasonal_naive": {
+          "mae": 2543.55,
+          "mape": 0.0475,
+          "rmse": 3429.89,
+          "r2": 0.9273
+        }
+      },
+      "lightgbm_improvement_over_best_baseline": 0.1437,
+      "p10_p90_interval_coverage": 0.7799,
+      "p10_p90_nominal_coverage": 0.8,
+      "folds": [
+        {
+          "fold": 1,
+          "train_rows": 507,
+          "test_rows": 507,
+          "test_period_start": "2025-08-05 00:00:00",
+          "test_period_end": "2025-11-12 00:00:00",
+          "lightgbm_mae": 3778.49,
+          "persistence_mae": 4127.54
+        },
+        {
+          "fold": 2,
+          "train_rows": 1014,
+          "test_rows": 507,
+          "test_period_start": "2025-11-13 00:00:00",
+          "test_period_end": "2026-02-05 00:00:00",
+          "lightgbm_mae": 2246.64,
+          "persistence_mae": 3342.95
+        },
+        {
+          "fold": 3,
+          "train_rows": 1521,
+          "test_rows": 507,
+          "test_period_start": "2026-02-05 00:00:00",
+          "test_period_end": "2026-04-30 00:00:00",
+          "lightgbm_mae": 1456.52,
+          "persistence_mae": 2247.04
+        },
+        {
+          "fold": 4,
+          "train_rows": 2028,
+          "test_rows": 507,
+          "test_period_start": "2026-05-01 00:00:00",
+          "test_period_end": "2026-07-24 00:00:00",
+          "lightgbm_mae": 1467.37,
+          "persistence_mae": 2016.2
+        },
+        {
+          "fold": 5,
+          "train_rows": 2535,
+          "test_rows": 507,
+          "test_period_start": "2026-07-24 00:00:00",
+          "test_period_end": "2026-10-16 00:00:00",
+          "lightgbm_mae": 1941.38,
+          "persistence_mae": 2142.86
+        }
+      ],
+      "selection": {
+        "family": "lightgbm",
+        "mae": 2178.08,
+        "beats_baseline": true,
+        "improvement_over_best_baseline": 0.1437,
+        "ranking": [
+          "lightgbm",
+          "random_forest",
+          "baseline_seasonal_naive",
+          "baseline_persistence"
+        ]
+      },
+      "conformal_offset": 0.018391
+    }
+  },
+  "environment": {
+    "python": "3.13.18",
+    "lightgbm": "4.7.0"
+  }
+}

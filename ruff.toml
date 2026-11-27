@@ -1,0 +1,9 @@
+# Lint rules for this repository, so CI and local runs agree.
+line-length = 100
+target-version = "py312"
+
+[lint]
+# Errors, pyflakes, import order and bugbear. FastAPI's Depends() in default
+# arguments is the framework's intended pattern, so B008 is off.
+select = ["E4", "E7", "E9", "F", "I", "B"]
+ignore = ["B008", "B905"]

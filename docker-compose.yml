@@ -1,0 +1,42 @@
+# Local full-stack run: docker compose up --build
+# The API trains its models on first start if no artifacts are present.
+
+services:
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      ENVIRONMENT: development
+      DATABASE_URL: sqlite:////app/data/tracker.db
+      ARTIFACT_DIR: /app/ml/artifacts
+      CORS_ORIGINS: http://localhost:5173,http://localhost:4173
+      JWT_SECRET: ${JWT_SECRET:-local-development-secret-change-me}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      COLLECT_INTERVAL_MINUTES: ${COLLECT_INTERVAL_MINUTES:-240}
+      RETRAIN_INTERVAL_HOURS: ${RETRAIN_INTERVAL_HOURS:-24}
+      COLLECTOR_TOKEN: ${COLLECTOR_TOKEN:-}
+    volumes:
+      # Named volume so the database and trained models survive a rebuild.
+      - tracker-data:/app/data
+      - tracker-artifacts:/app/ml/artifacts
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_BASE_URL: http://localhost:8000
+    ports:
+      - "5173:80"
+    depends_on:
+      api:
+        condition: service_healthy
+
+volumes:
+  tracker-data:
+  tracker-artifacts:

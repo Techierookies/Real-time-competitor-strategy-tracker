@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { MessageCircle, X, Send } from 'lucide-react';
+import { api } from '../../lib/api';
 
 interface Message {
   id: string;
@@ -52,15 +53,8 @@ export default function ChatWidget() {
     setIsTyping(true);
 
     try {
-      const response = await fetch('http://localhost:8000/api/chatbot', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ message: inputValue }),
-      });
-
-      const data = await response.json();
+      // Answers are computed from stored prices and forecasts on the server.
+      const data = await api.assistant(userMessage.text);
 
       const botMessage: Message = {
         id: (Date.now() + 1).toString(),

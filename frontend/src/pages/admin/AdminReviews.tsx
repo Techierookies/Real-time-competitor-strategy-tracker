@@ -3,6 +3,7 @@ import { Check, X, Star, Trash2 } from "lucide-react";
 import { Card } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
 import { useToast } from "../../hooks/use-toast";
+import { api } from "../../lib/api";
 
 interface Review {
   source: string;
@@ -17,26 +18,25 @@ export const AdminReviews = () => {
   const [reviews, setReviews] = useState<(Review & { id: string; status: string; date: string })[]>([]);
   const [model, setModel] = useState("iPhone 16");
 
-  // ✅ Fetch reviews dynamically from FastAPI
+  // Fetch stored review snippets from the API
   useEffect(() => {
     const fetchReviews = async () => {
       try {
-        const res = await fetch(`http://127.0.0.1:8000/api/synthetic-reviews/${model}`);
-        const data = await res.json();
-        if (data.status === "success") {
-          // Adding fake IDs + default status for UI consistency
-          const enhanced = data.reviews.map((r: Review, idx: number) => ({
-            ...r,
-            id: `${idx + 1}`,
-            status: "approved",
-            date: new Date().toISOString().split("T")[0],
-          }));
-          setReviews(enhanced);
-        } else {
-          toast({ title: "Error", description: data.message || "No reviews found." });
+        const data = await api.reviews(model);
+        if (data.reviews.length === 0) {
+          toast({ title: "No reviews yet", description: `No stored reviews for ${model}.` });
         }
+        const enhanced = data.reviews.map((r, idx) => ({
+          source: r.source,
+          rating: r.rating ?? 0,
+          review: r.review,
+          id: `${idx + 1}`,
+          status: "approved",
+          date: String(r.observed_at).slice(0, 10),
+        }));
+        setReviews(enhanced);
       } catch (err) {
-        toast({ title: "Error", description: "Failed to fetch reviews." });
+        toast({ title: "Error", description: err instanceof Error ? err.message : "Failed to fetch reviews." });
       }
     };
     fetchReviews();
